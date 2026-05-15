@@ -2,7 +2,9 @@ name = "sketchnote-visualizer"
 main = "src/worker.js"
 compatibility_date = "2025-05-01"
 
+[build]
+command = "npm run build"
+
 [assets]
 directory = "dist"
-not_found_handling = "single-page-application"
-run_worker_first = ["/api/*"]
+run_worker_first = true
