@@ -1,4 +1,4 @@
-name = "sketchnote"
+name = "sketchnote.rsab1963.workers.dev"
 main = "src/worker.js"
 compatibility_date = "2025-05-01"
 
