@@ -280,7 +280,16 @@ export default function App(){
   const[step,setStep]=useState(0);
   const[ft,setFt]=useState('');
   const[frs,setFrs]=useState('free');
+  const[ed,setEd]=useState(false);
   const fr=useRef(null);
+
+  const updSec=(idx,field,val)=>{setSn(prev=>{if(!prev)return prev;const ns={...prev,sections:prev.sections.map((s,i)=>i===idx?{...s,[field]:val}:s)};return ns;});};
+  const updItem=(secIdx,itemIdx,val)=>{setSn(prev=>{if(!prev)return prev;const ns={...prev,sections:prev.sections.map((s,i)=>i===secIdx?{...s,items:s.items.map((it,j)=>j===itemIdx?val:it)}:s)};return ns;});};
+  const addItem=(secIdx)=>{setSn(prev=>{if(!prev)return prev;const ns={...prev,sections:prev.sections.map((s,i)=>i===secIdx?{...s,items:[...s.items,'Neuer Punkt']}:s)};return ns;});};
+  const delItem=(secIdx,itemIdx)=>{setSn(prev=>{if(!prev)return prev;const ns={...prev,sections:prev.sections.map((s,i)=>i===secIdx?{...s,items:s.items.filter((_,j)=>j!==itemIdx)}:s)};return ns;});};
+  const updTitle=(val)=>{setSn(prev=>prev?{...prev,title:val}:prev);};
+  const updSubtitle=(val)=>{setSn(prev=>prev?{...prev,subtitle:val}:prev);};
+  const updCm=(val)=>{setSn(prev=>prev?{...prev,cm:val}:prev);};
 
   const gen=useCallback(async(a,m)=>{setAns(a);setPh('loading');setErr(null);
     try{const d=await callAPI(a,m);const mk=m==='guided'?(MO[a.mood]||'neutral'):(d.mood&&PAL[d.mood]?d.mood:'empathisch');setPal(PAL[mk]||PAL.neutral);setSn(d);setPh('result');}
@@ -353,19 +362,71 @@ export default function App(){
     let svg;
     try{svg=rs==='free'?<FreeSVG data={sn} pal={pal}/>:<StructSVG data={sn} pal={pal}/>;}
     catch(e){svg=<div style={{padding:20,color:'#E8584F'}}>Fehler: {e.message}</div>;}
+    const eS={width:'100%',padding:'8px 10px',borderRadius:8,border:'2px solid #e0e0e0',fontFamily:'Patrick Hand,cursive',fontSize:14,outline:'none',boxSizing:'border-box',background:'#FAFAFA'};
     return(<div style={{minHeight:'100vh',background:'linear-gradient(145deg,#FEFCFB,#F5F0EB)'}}>
       <style>{FC}</style>
       <div style={{textAlign:'center',padding:'16px 16px 3px'}}><h1 style={{fontFamily:'Caveat,cursive',fontSize:30,fontWeight:700,color:'#2D2D2D',margin:0}}>✏️ Sketchnote Visualizer</h1></div>
       <div style={{padding:14}}>
         <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap',justifyContent:'center'}}>
-          <button onClick={()=>{setPh('mode');setMode(null);setAns({});setSn(null);setErr(null);}} style={bt('#888',false)}>← Neu</button>
-          <button onClick={()=>setPh(mode==='free'?'free':'guided')} style={bt('#7B68AE',false)}>✏️ Bearbeiten</button>
+          <button onClick={()=>{setPh('mode');setMode(null);setAns({});setSn(null);setErr(null);setEd(false);}} style={bt('#888',false)}>← Neu</button>
+          <button onClick={()=>gen(ans,mode)} style={bt('#E8584F',false)}>🎲 Neu würfeln</button>
+          <button onClick={()=>setEd(e=>!e)} style={bt(ed?'#E8584F':'#7B68AE',ed)}>{ed?'✓ Fertig':'📝 Bearbeiten'}</button>
           <button onClick={()=>setRs(r=>r==='free'?'structured':'free')} style={bt('#3B7DD8',false)}>{rs==='free'?'📦 Kästchen':'🎨 Frei'}</button>
           <button onClick={()=>dlS(sn?.title)} style={bt('#2E86AB',false)}>⬇ SVG</button>
           <button onClick={()=>dlP(sn?.title,pal)} style={bt('#4CAF50',false)}>⬇ PNG</button>
           <button onClick={()=>dlJ(ans,sn,mode,rs)} style={bt('#F5A623',false)}>💾 Speichern</button>
         </div>
         <div style={{maxWidth:1100,margin:'0 auto',boxShadow:'0 6px 28px rgba(0,0,0,.1)',borderRadius:12,overflow:'hidden'}}>{svg}</div>
+
+        {/* Edit Panel */}
+        {ed&&(<div style={{maxWidth:800,margin:'20px auto',padding:20,background:'#fff',borderRadius:14,border:'2px solid #e0e0e0',boxShadow:'0 4px 16px rgba(0,0,0,.06)'}}>
+          <h3 style={{fontFamily:'Caveat,cursive',fontSize:22,color:'#2D2D2D',marginBottom:12}}>📝 Direkt bearbeiten</h3>
+
+          {/* Title & Subtitle */}
+          <div style={{display:'flex',gap:10,marginBottom:16}}>
+            <div style={{flex:2}}>
+              <label style={{fontFamily:'Caveat,cursive',fontSize:14,color:'#888'}}>Titel</label>
+              <input value={sn.title} onChange={e=>updTitle(e.target.value)} style={eS}/>
+            </div>
+            <div style={{flex:3}}>
+              <label style={{fontFamily:'Caveat,cursive',fontSize:14,color:'#888'}}>Untertitel</label>
+              <input value={sn.subtitle||''} onChange={e=>updSubtitle(e.target.value)} style={eS}/>
+            </div>
+          </div>
+
+          {/* Central Message */}
+          <div style={{marginBottom:16}}>
+            <label style={{fontFamily:'Caveat,cursive',fontSize:14,color:'#888'}}>Zentrale Botschaft</label>
+            <input value={sn.cm||''} onChange={e=>updCm(e.target.value)} style={eS}/>
+          </div>
+
+          {/* Sections */}
+          {sn.sections.map((sec,si)=>(
+            <div key={si} style={{marginBottom:14,padding:12,borderRadius:10,border:`2px solid ${gc(pal,sec.color)}22`,background:`${gc(pal,sec.color)}08`}}>
+              <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
+                <span style={{fontFamily:'Caveat,cursive',fontSize:16,fontWeight:700,color:gc(pal,sec.color),minWidth:24}}>{sec.n}.</span>
+                <input value={sec.title} onChange={e=>updSec(si,'title',e.target.value)} style={{...eS,fontWeight:600}}/>
+                <select value={sec.scene||''} onChange={e=>updSec(si,'scene',e.target.value||null)} style={{...eS,width:140,flex:'none'}}>
+                  <option value="">Kein Bild</option>
+                  {SCENE_NAMES.map(s=>(<option key={s} value={s}>{s}</option>))}
+                </select>
+                <select value={sec.color} onChange={e=>updSec(si,'color',e.target.value)} style={{...eS,width:100,flex:'none'}}>
+                  <option value="primary">Primär</option>
+                  <option value="secondary">Sekundär</option>
+                  <option value="accent">Akzent</option>
+                </select>
+              </div>
+              {sec.items.map((item,ii)=>(
+                <div key={ii} style={{display:'flex',gap:6,marginBottom:4,alignItems:'center',paddingLeft:32}}>
+                  <span style={{color:gc(pal,sec.color),fontSize:18}}>•</span>
+                  <input value={item} onChange={e=>updItem(si,ii,e.target.value)} style={{...eS,flex:1}}/>
+                  <button onClick={()=>delItem(si,ii)} style={{background:'none',border:'none',color:'#E8584F',cursor:'pointer',fontSize:18,padding:'0 4px'}}>✕</button>
+                </div>
+              ))}
+              <button onClick={()=>addItem(si)} style={{marginLeft:32,background:'none',border:'none',color:gc(pal,sec.color),cursor:'pointer',fontFamily:'Patrick Hand,cursive',fontSize:13}}>+ Punkt hinzufügen</button>
+            </div>
+          ))}
+        </div>)}
       </div>
     </div>);
   }
