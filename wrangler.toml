@@ -1,5 +1,5 @@
-name = "sketchnote/"
-main = "src/worker.js"
+name = "sketchnote"
+main = "worker.js"
 compatibility_date = "2025-05-01"
 
 [build]
