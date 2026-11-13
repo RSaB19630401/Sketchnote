@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
+import { kiFetch } from "./kiFetch.js";
 
 const FC = `@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');`;
 
@@ -329,7 +330,7 @@ WICHTIG: Alle Texte in ${tLang} schreiben!`;
     usr=`THEMA:${answers.topic} ZIEL:${answers.goal||''} EXTRA:${answers.extras||''} JSON:`;
   }else{sys=base+' Freie Beschreibung.Leite alles ab.';usr=`BESCHREIBUNG:${answers.freetext} JSON:`;}
   const apiUrl = import.meta.env.VITE_API_URL || '/api/generate';
-  const res=await fetch(apiUrl,{method:"POST",headers:{"Content-Type":"application/json"},
+  const res=await kiFetch(apiUrl,{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({max_tokens:2000,system:sys,messages:[{role:"user",content:usr}]})});
   if(res.status===429&&attempt<2){await new Promise(r=>setTimeout(r,(attempt+1)*15000));return callAPI(answers,mode,attempt+1,lang);}
   if(!res.ok)throw new Error(res.status===429?'Rate-Limit erreicht. Bitte 30s warten und erneut versuchen.':`API-Fehler ${res.status}`);

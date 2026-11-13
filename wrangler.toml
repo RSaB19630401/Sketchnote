@@ -15,3 +15,14 @@ run_worker_first = true
 [vars]
 CLAUDE_MODEL = "claude-sonnet-5-5"
 CLAUDE_MODEL_FALLBACK = "claude-sonnet-4-6"
+
+# Begrenzung: höchstens 10 KI-Anfragen pro Minute und IP-Adresse
+[[ratelimits]]
+name = "KI_LIMIT"
+namespace_id = "2003"
+
+  [ratelimits.simple]
+  limit = 10
+  period = 60
+
+# Secret ACCESS_CODE (Zugangscode) wird im Dashboard gesetzt, nicht hier.
