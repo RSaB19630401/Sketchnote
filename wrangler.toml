@@ -9,3 +9,9 @@ command = "npm run build"
 directory = "dist"
 binding = "ASSETS"
 run_worker_first = true
+
+# Claude-Modell – wird bei jedem Build aus GitHub gesetzt.
+# Im Cloudflare-Dashboard geänderte Werte würden beim nächsten Push überschrieben.
+[vars]
+CLAUDE_MODEL = "claude-sonnet-5-5"
+CLAUDE_MODEL_FALLBACK = "claude-sonnet-4-6"
